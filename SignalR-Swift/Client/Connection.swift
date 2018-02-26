@@ -94,49 +94,53 @@ public class Connection: ConnectionProtocol {
     func negotiate(transport: ClientTransportProtocol) {
         self.connectionData = self.onSending()
 
-        transport.negotiate(connection: self, connectionData: self.connectionData, completionHandler: { [unowned self] (response, error) in
+        transport.negotiate(connection: self, connectionData: self.connectionData, completionHandler: { [weak self] (response, error) in
+            guard let sSelf = self else { return }
+            
             if let error = error {
-                self.didReceiveError(error: error)
-                self.stopButDoNotCallServer()
+                sSelf.didReceiveError(error: error)
+                sSelf.stopButDoNotCallServer()
                 return
             }
             
-            defer { self.startTransport() }
+            defer { sSelf.startTransport() }
             
             guard let response = response else { return }
             
-            self.verifyProtocolVersion(versionString: response.protocolVersion)
+            sSelf.verifyProtocolVersion(versionString: response.protocolVersion)
             
-            self.connectionId = response.connectionId
-            self.connectionToken = response.connectionToken
-            self.disconnectTimeout = response.disconnectTimeout
+            sSelf.connectionId = response.connectionId
+            sSelf.connectionToken = response.connectionToken
+            sSelf.disconnectTimeout = response.disconnectTimeout
             
             if let transportTimeout = response.transportConnectTimeout {
-                self.transportConnectTimeout += transportTimeout
+                sSelf.transportConnectTimeout += transportTimeout
             }
             
             if let keepAlive = response.keepAliveTimeout {
-                self.keepAliveData = KeepAliveData(timeout: keepAlive)
+                sSelf.keepAliveData = KeepAliveData(timeout: keepAlive)
             }
         })
     }
 
     func startTransport() {
-        self.transport?.start(connection: self, connectionData: self.connectionData, completionHandler: { [unowned self] (response, error) in
+        self.transport?.start(connection: self, connectionData: self.connectionData, completionHandler: { [weak self] (response, error) in
+            guard let sSelf = self else { return }
+            
             if let error = error {
-                self.didReceiveError(error: error)
-                self.stopButDoNotCallServer()
+                sSelf.didReceiveError(error: error)
+                sSelf.stopButDoNotCallServer()
                 return
             }
             
-            _ = self.changeState(oldState: .connecting, toState: .connected)
+            _ = sSelf.changeState(oldState: .connecting, toState: .connected)
             
-            if self.keepAliveData != nil, let transport = self.transport, transport.supportsKeepAlive {
-                self.monitor?.start()
+            if sSelf.keepAliveData != nil, let transport = sSelf.transport, transport.supportsKeepAlive {
+                sSelf.monitor?.start()
             }
             
-            self.started?()
-            self.delegate?.connectionDidOpen(connection: self)
+            sSelf.started?()
+            sSelf.delegate?.connectionDidOpen(connection: sSelf)
         })
     }
 
