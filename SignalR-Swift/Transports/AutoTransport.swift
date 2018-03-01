@@ -15,8 +15,7 @@ public class AutoTransport: HttpTransport {
     override convenience init() {
         let transports = [
             WebSocketTransport(),
-            ServerSentEventsTransport(),
-            LongPollingTransport()
+            ServerSentEventsTransport()
         ]
 
         self.init(withTransports: transports)

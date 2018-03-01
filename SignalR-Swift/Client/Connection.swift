@@ -302,7 +302,7 @@ public class Connection: ConnectionProtocol {
     
     public func getRequest(url: URLConvertible, httpMethod: HTTPMethod, encoding: ParameterEncoding, parameters: Parameters?, timeout: Double, headers: HTTPHeaders) -> DataRequest {
         var globalHeaders = self.headers
-        globalHeaders["User-Agent"] = self.createUserAgentString(client: "SignalR.Client.iOS")
+        globalHeaders["User-Agent"] = self.createUserAgentString(client: "RTM.SignalR.Client.iOS")
 
         for (httpHeader, value) in headers {
             globalHeaders[httpHeader] = value
